@@ -1,0 +1,11 @@
+{
+  "name": "SuperCrush",
+  "short_name": "SuperCrush",
+  "description": "Combine doces, crie especiais e vença as fases.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#6a1fd1",
+  "theme_color": "#6a1fd1",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
