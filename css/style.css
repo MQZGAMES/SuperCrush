@@ -303,6 +303,20 @@ body.ready .logo { animation: logoIn .9s cubic-bezier(.2, 1.6, .4, 1) both; }
 .btn.sacanear.show:active { transform: translateY(4px); }
 @keyframes wiggle { 0%, 70%, 100% { rotate: 0deg; } 76% { rotate: -6deg; } 84% { rotate: 6deg; } 92% { rotate: -3deg; } }
 
+/* ---------- instalar app ---------- */
+.install-btn {
+  font-size: 1rem; font-weight: 600;
+  padding: 9px 20px; border-radius: 999px;
+  background: var(--glass); border: 1.5px solid var(--glass-border);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.install-btn:active { transform: scale(.96); }
+.install-tip {
+  max-width: 290px; text-align: center; font-size: .9rem; line-height: 1.35;
+  padding: 10px 14px; border-radius: 16px; background: rgba(40, 0, 70, .4);
+}
+[hidden] { display: none !important; }
+
 /* ---------- modal ---------- */
 #modal {
   position: absolute; inset: 0; z-index: 20;

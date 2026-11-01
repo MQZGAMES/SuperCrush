@@ -35,6 +35,10 @@ npx http-server . -p 5180
 
 Depois abra http://localhost:5180.
 
+## Instalar como app
+
+O SuperCrush é um web app (PWA): funciona offline e pode ser instalado na tela inicial. No Android/Chrome use o botão **📲 Instalar app** da tela inicial; no iPhone toque em Compartilhar → Adicionar à Tela de Início.
+
 ## Estrutura
 
 - `js/board.js` – regras, cascatas, especiais, animações e efeitos do tabuleiro

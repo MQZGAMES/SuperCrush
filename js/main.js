@@ -379,6 +379,29 @@ function confetti() {
 }
 
 // ---------- início ----------
+// ---------- web app ----------
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+const standalone = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone;
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installPrompt = e;
+  $('#btn-install').hidden = false;
+});
+window.addEventListener('appinstalled', () => { $('#btn-install').hidden = true; installPrompt = null; });
+$('#btn-install').addEventListener('click', async () => {
+  sfx.click();
+  if (installPrompt) {
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;
+    $('#btn-install').hidden = true;
+  } else $('#install-tip').hidden = !$('#install-tip').hidden;
+});
+if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) $('#btn-install').hidden = false;
+
 window.SuperCrush = { get board() { return board; }, startLevel, startInfinite };
 refreshSoundButtons();
 refreshInfBest();
