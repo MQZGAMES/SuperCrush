@@ -286,6 +286,23 @@ body.ready .logo { animation: logoIn .9s cubic-bezier(.2, 1.6, .4, 1) both; }
   100% { opacity: 0; transform: translateY(-75%) scale(.9) rotate(-3deg); }
 }
 
+/* ---------- modo infinito ---------- */
+#btn-infinite { font-size: 1.2rem; padding: 12px 30px; margin-top: 6px; }
+.inf-best { min-height: 1.2em; font-weight: 600; text-shadow: 0 2px 6px rgba(60, 0, 80, .5); }
+#game-footer { display: none; justify-content: center; align-items: center; height: 74px; flex: none; padding-bottom: 8px; }
+#screen-game.infinite #game-footer { display: flex; }
+#screen-game.infinite #starbar .mk { display: none; }
+.btn.sacanear {
+  font-size: 1.35rem; padding: 12px 34px;
+  background: linear-gradient(#ff7ac0, #ff2e7e);
+  box-shadow: 0 6px 0 #a8004d, 0 0 0 6px rgba(255, 255, 255, .25), 0 12px 26px rgba(0, 0, 0, .3);
+  opacity: 0; transform: scale(.5) translateY(20px); pointer-events: none;
+  transition: opacity .3s, transform .4s cubic-bezier(.2, 1.6, .4, 1);
+}
+.btn.sacanear.show { opacity: 1; transform: none; pointer-events: auto; animation: wiggle 1.6s ease-in-out .4s infinite; }
+.btn.sacanear.show:active { transform: translateY(4px); }
+@keyframes wiggle { 0%, 70%, 100% { rotate: 0deg; } 76% { rotate: -6deg; } 84% { rotate: 6deg; } 92% { rotate: -3deg; } }
+
 /* ---------- modal ---------- */
 #modal {
   position: absolute; inset: 0; z-index: 20;

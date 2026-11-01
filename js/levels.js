@@ -18,6 +18,10 @@ function seeded(n) {
   return () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
 }
 
+export function getInfiniteLevel() {
+  return { n: 0, kind: 'infinite', infinite: true, rows: 8, cols: 8, colors: 6, moves: Infinity, stars: [1, 1, 1] };
+}
+
 export function getLevel(n) {
   const kind = ['score', 'collect', 'jelly'][(n - 1) % 3];
   const tier = Math.floor((n - 1) / 3);

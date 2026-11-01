@@ -19,6 +19,10 @@ Jogo de combinar 3 doces no estilo Candy Crush, **mobile first**, feito em HTML5
 
 Trocar dois especiais entre si gera combos: listrado + listrado (cruz), listrado + embrulhado (cruz tripla), embrulhado + embrulhado (explosão 5x5), bomba + doce (todos daquela cor), bomba + listrado/embrulhado (todos daquela cor viram especiais e explodem), bomba + bomba (limpa o tabuleiro).
 
+## Modo Infinito
+
+Jogue sem limite de jogadas: a cada meta de pontos você sobe de nível e o recorde fica salvo. Quando o tabuleiro trava (sem jogadas possíveis) ou você fica um tempo parado, aparece o botão **😈 Sacanear**, que coloca especiais prontos no tabuleiro (bomba de chocolate, dupla listrada, dupla embrulhada...) para você continuar.
+
 ## Fases
 
 60 fases que alternam três tipos de meta: **pontuação**, **coletar doces** e **limpar geleia** (geleia dupla a partir da fase 15). Progresso, estrelas e recordes ficam salvos no navegador.

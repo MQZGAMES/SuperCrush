@@ -33,8 +33,11 @@ export class Board {
     this.level = level;
     this.cb = cb;
     this.rows = level.rows; this.cols = level.cols;
-    this.moves = level.moves;
+    this.infinite = !!level.infinite;
+    this.moves = this.infinite ? Infinity : level.moves;
     this.score = 0;
+    this.stuck = false;
+    this.infLevel = 1; this.infPrev = 0; this.infNext = 2500;
     this.collect = level.collect ? { ...level.collect } : null;
     this.jelly = [];
     this.jellyLeft = 0;
@@ -68,6 +71,7 @@ export class Board {
       this.updateFx(dt);
       if (!this.busy && !this.ended) {
         this.idle += dt;
+        if (this.infinite && this.idle > 12000) this.setStuck(true);
         if (this.idle > 5000 && !this.hint) {
           this.hint = this.findMove();
           if (this.hint) this.hintIds = new Set(this.hint.map(([r, c]) => this.grid[r][c].id));
@@ -322,7 +326,66 @@ export class Board {
     await this.afterTurn();
   }
 
-  useMove() { this.moves--; this.cb.onUpdate?.(); }
+  useMove() { this.moves--; this.setStuck(false); this.cb.onUpdate?.(); }
+
+  setStuck(v) {
+    if (this.stuck === v) return;
+    this.stuck = v;
+    this.cb.onStuck?.(v);
+  }
+
+  // Ajuda do botão "Sacanear": cria especiais prontos para usar, garantindo uma jogada.
+  async helpOut() {
+    if (this.busy || this.ended || !this.stuck) return;
+    this.busy = true;
+    this.setStuck(false);
+    this.hint = null; this.hintIds = null; this.selected = null;
+    const normal = (r, c) => this.inside(r, c) && this.grid[r][c] && !this.grid[r][c].special;
+    const pairs = [];
+    for (let r = 0; r < this.rows; r++) for (let c = 0; c < this.cols; c++) {
+      if (!normal(r, c)) continue;
+      if (normal(r, c + 1)) pairs.push([[r, c], [r, c + 1]]);
+      if (normal(r + 1, c)) pairs.push([[r, c], [r + 1, c]]);
+    }
+    const striped = () => (Math.random() < 0.5 ? H : V);
+    const options = [
+      { label: 'Bomba de chocolate!', specials: [BOMB] },
+      { label: 'Dupla listrada!', specials: [striped(), striped()] },
+      { label: 'Dupla embrulhada!', specials: [WRAP, WRAP] },
+      { label: 'Combo surpresa!', specials: [striped(), WRAP] },
+      { label: 'Bomba dupla!', specials: [BOMB, striped()] },
+    ];
+    let opt = options[Math.floor(Math.random() * options.length)];
+    if (!pairs.length) opt = options[0];
+    let cells;
+    if (opt.specials.length === 1) {
+      const all = [];
+      for (let r = 0; r < this.rows; r++) for (let c = 0; c < this.cols; c++) if (normal(r, c)) all.push([r, c]);
+      const [r, c] = all.length ? all[Math.floor(Math.random() * all.length)] : [Math.floor(this.rows / 2), Math.floor(this.cols / 2)];
+      cells = [[r, c]];
+      const nb = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dr, dc]) => [r + dr, c + dc]).find(([y, x]) => this.inside(y, x));
+      this.pendingHint = [[r, c], nb];
+    } else {
+      cells = pairs[Math.floor(Math.random() * pairs.length)];
+      this.pendingHint = cells;
+    }
+    sfx.sugar();
+    this.cb.onBigText?.(opt.label, 'mega');
+    cells.forEach(([r, c], i) => {
+      const cd = this.grid[r][c];
+      cd.special = opt.specials[i];
+      cd.scale = 0;
+      this.tween(cd, { scale: 1 }, 520, ease.outBack, i * 120);
+      this.fx.push({ kind: 'ring', x: c + 0.5, y: r + 0.5, t: 0, life: 600, maxR: 1.6, color: '#ffffff' });
+      this.burst(r, c, '#fff6a8', 14, true);
+    });
+    this.shake = 6;
+    await this.wait(700);
+    this.hint = this.pendingHint;
+    this.hintIds = new Set(this.hint.map(([r, c]) => this.grid[r][c].id));
+    this.idle = 0;
+    this.busy = false;
+  }
 
   async comboSwap(a, ra, ca, b, rb, cb) {
     const consume = (cd, r, c) => { this.grid[r][c] = null; this.hitJelly(r, c); this.killCandy(cd); };
@@ -517,12 +580,18 @@ export class Board {
       return;
     }
     if (this.moves <= 0) { this.end(false); return; }
-    if (!this.findMove()) await this.shuffle();
+    if (!this.findMove()) {
+      if (this.infinite) {
+        this.cb.onBigText?.('Travou!', 'info');
+        this.setStuck(true);
+      } else await this.shuffle();
+    }
     this.busy = false;
   }
 
   goalDone() {
     const L = this.level;
+    if (this.infinite) return false;
     if (L.kind === 'score') return this.score >= L.target;
     if (L.kind === 'collect') return Object.values(this.collect).every(v => v <= 0);
     return this.jellyLeft <= 0;
@@ -609,6 +678,12 @@ export class Board {
   addScore(pts, x, y, color) {
     this.score += pts;
     if (x != null) this.texts.push({ x, y, text: String(pts), t: 0, life: 900, color });
+    while (this.infinite && this.score >= this.infNext) {
+      this.infLevel++;
+      this.infPrev = this.infNext;
+      this.infNext += 2000 + this.infLevel * 600;
+      this.cb.onLevelUp?.(this.infLevel);
+    }
     this.cb.onUpdate?.();
   }
 
