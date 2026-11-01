@@ -1,7 +1,7 @@
 // Service worker: deixa o jogo instalável e jogável offline.
 // Arquivos do jogo: rede primeiro (sempre a versão mais nova), cache como reserva offline.
 // Fontes do Google: cache primeiro.
-const CACHE = 'supercrush-v3';
+const CACHE = 'supercrush-v4';
 const CORE = [
   './',
   'index.html',

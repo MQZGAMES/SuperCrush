@@ -21,7 +21,7 @@ Trocar dois especiais entre si gera combos: listrado + listrado (cruz), listrado
 
 ## Modo Infinito
 
-Jogue sem limite de jogadas: a cada meta de pontos você sobe de nível e o recorde fica salvo. Quando o tabuleiro trava (sem jogadas possíveis) ou você fica um tempo parado, aparece o botão **😈 Sacanear**, que coloca especiais prontos no tabuleiro (bomba de chocolate, dupla listrada, dupla embrulhada...) para você continuar.
+Jogue sem limite de jogadas: a cada meta de pontos você sobe de nível e o recorde fica salvo. Quando não sobra nenhuma jogada possível (você perdeu), aparece o botão **😈 Sacanear**, que coloca especiais prontos no tabuleiro (bomba de chocolate, dupla listrada, dupla embrulhada...) para você continuar.
 
 ## Fases
 

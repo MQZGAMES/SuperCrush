@@ -71,7 +71,6 @@ export class Board {
       this.updateFx(dt);
       if (!this.busy && !this.ended) {
         this.idle += dt;
-        if (this.infinite && this.idle > 12000) this.setStuck(true);
         if (this.idle > 5000 && !this.hint) {
           this.hint = this.findMove();
           if (this.hint) this.hintIds = new Set(this.hint.map(([r, c]) => this.grid[r][c].id));
@@ -582,7 +581,7 @@ export class Board {
     if (this.moves <= 0) { this.end(false); return; }
     if (!this.findMove()) {
       if (this.infinite) {
-        this.cb.onBigText?.('Travou!', 'info');
+        this.cb.onBigText?.('Sem jogadas!', 'info');
         this.setStuck(true);
       } else await this.shuffle();
     }
