@@ -6,7 +6,7 @@ const CORE = [
   './',
   'index.html',
   'css/style.css',
-  'js/main.js',
+  'js/main.js?v=5',
   'js/board.js',
   'js/art.js',
   'js/audio.js',

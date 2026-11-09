@@ -1,6 +1,6 @@
 // Telas, mapa de fases, HUD, modais e progresso salvo.
-import { Board } from './board.js';
-import { getLevel, getInfiniteLevel, getKidLevel, MAX_LEVEL } from './levels.js';
+import { Board } from './board.js?v=5';
+import { getLevel, getInfiniteLevel, getKidLevel, MAX_LEVEL } from './levels.js?v=5';
 import { sfx, setMuted, isMuted } from './audio.js';
 import { getSprite, iconURL } from './art.js';
 
