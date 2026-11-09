@@ -164,7 +164,6 @@ export class Board {
     this._down = e => {
       if (this.busy || this.ended || this.paused) return;
       const p = this.cellAt(e); if (!p) return;
-      if (this.kid) { this.kidPlay(p.r, p.c); return; }
       this.drag = { ...p, x: e.clientX, y: e.clientY };
       try { cv.setPointerCapture(e.pointerId); } catch { /* ok */ }
       this.idle = 0; this.hint = null; this.hintIds = null;
@@ -362,6 +361,7 @@ export class Board {
     sfx.swap();
     this.grid[r1][c1] = b; this.grid[r2][c2] = a;
     await Promise.all([this.tween(a, { x: c2, y: r2 }, 170, ease.inOut), this.tween(b, { x: c1, y: r1 }, 170, ease.inOut)]);
+    if (this.kid) { await this.kidPlay(r2, c2); return; }
     const combo = a.special === BOMB || b.special === BOMB || (a.special && b.special);
     if (combo) {
       this.useMove();
