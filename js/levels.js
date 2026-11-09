@@ -18,6 +18,10 @@ function seeded(n) {
   return () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
 }
 
+export function getKidLevel() {
+  return { n: 0, kind: 'infinite', infinite: true, kid: true, rows: 7, cols: 6, colors: 6, moves: Infinity, stars: [1, 1, 1] };
+}
+
 export function getInfiniteLevel() {
   return { n: 0, kind: 'infinite', infinite: true, rows: 8, cols: 8, colors: 6, moves: Infinity, stars: [1, 1, 1] };
 }

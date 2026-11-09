@@ -34,6 +34,7 @@ export class Board {
     this.cb = cb;
     this.rows = level.rows; this.cols = level.cols;
     this.infinite = !!level.infinite;
+    this.kid = !!level.kid;
     this.moves = this.infinite ? Infinity : level.moves;
     this.score = 0;
     this.stuck = false;
@@ -163,6 +164,7 @@ export class Board {
     this._down = e => {
       if (this.busy || this.ended || this.paused) return;
       const p = this.cellAt(e); if (!p) return;
+      if (this.kid) { this.kidPlay(p.r, p.c); return; }
       this.drag = { ...p, x: e.clientX, y: e.clientY };
       try { cv.setPointerCapture(e.pointerId); } catch { /* ok */ }
       this.idle = 0; this.hint = null; this.hintIds = null;
@@ -296,6 +298,59 @@ export class Board {
     cand.push(longest.keys[Math.floor(longest.keys.length / 2)], ...g.cells);
     const key = cand.find(k => { const [r, c] = RC(k); const cd = this.grid[r][c]; return cd && !cd.special; });
     return key === undefined ? null : { key, special };
+  }
+
+  // ---------- modo crianca: qualquer toque/movimento vira festa ----------
+  async kidPlay(r, c) {
+    this.busy = true; this.selected = null; this.drag = null; this.hint = null; this.hintIds = null; this.idle = 0;
+    const cd = this.grid[r][c];
+    if (cd) { cd.sx = 1.3; cd.sy = 0.75; this.tween(cd, { sx: 1, sy: 1 }, 350, ease.outBack); }
+    const type = cd ? cd.type : 0;
+    const keys = [];
+    const line = (horiz, idx) => {
+      const n = horiz ? this.cols : this.rows;
+      for (let i = 0; i < n; i++) keys.push(horiz ? K(idx, i) : K(i, idx));
+      this.beam(horiz ? 'h' : 'v', idx, type);
+    };
+    const words = ['Uau!', 'Parabéns!', 'Que legal!', 'Incrível!', 'Você arrasou!', 'Isso!', 'Show!', 'Delicioso!', 'Super Crush!'];
+    const effects = [
+      () => { line(true, r); sfx.zap(); this.shake = 8; },
+      () => { line(false, c); sfx.zap(); this.shake = 8; },
+      () => { line(true, r); line(false, c); sfx.zap(); sfx.boom(); this.shake = 14; },
+      () => {
+        for (let y = r - 1; y <= r + 1; y++) for (let x = c - 1; x <= c + 1; x++) if (this.inside(y, x)) keys.push(K(y, x));
+        this.fx.push({ kind: 'ring', x: c + 0.5, y: r + 0.5, t: 0, life: 600, maxR: 2.4, color: PALETTE[type].base });
+        sfx.boom(); this.shake = 14;
+      },
+      () => {
+        for (let y = 0; y < this.rows; y++) for (let x = 0; x < this.cols; x++) {
+          const o = this.grid[y][x];
+          if (o && o.type === type) {
+            keys.push(K(y, x));
+            this.fx.push({ kind: 'bolt', x1: c + 0.5, y1: r + 0.5, x2: x + 0.5, y2: y + 0.5, t: 0, life: 520, color: PALETTE[type].base });
+          }
+        }
+        sfx.bomb(); this.shake = 10;
+      },
+      () => {
+        for (let y = 0; y < this.rows; y++) for (let x = 0; x < this.cols; x++) keys.push(K(y, x));
+        this.fx.push({ kind: 'ring', x: c + 0.5, y: r + 0.5, t: 0, life: 800, maxR: 9, color: '#ffffff' });
+        sfx.bomb(); sfx.boom(); this.shake = 22;
+      },
+    ];
+    // O efeito gigante aparece de vez em quando; todo toque premia.
+    const last = effects.length - 1;
+    const pick = Math.random() < 0.12 ? last : Math.floor(Math.random() * last);
+    effects[pick]();
+    this.burst(r, c, '#fff6a8', 16, true);
+    sfx.star(Math.floor(Math.random() * 4));
+    this.cb.onBigText?.(words[Math.floor(Math.random() * words.length)], 'mega');
+    this.cb.onCelebrate?.(pick === last);
+    this.addScore(100 + keys.length * 10, c + 0.5, r + 0.5, '#c48800');
+    await this.explode(keys, new Set(), 1, true);
+    await this.gravity();
+    await this.resolve(null);
+    this.busy = false;
   }
 
   // ---------- jogadas ----------

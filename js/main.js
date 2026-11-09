@@ -1,6 +1,6 @@
 // Telas, mapa de fases, HUD, modais e progresso salvo.
 import { Board } from './board.js';
-import { getLevel, getInfiniteLevel, MAX_LEVEL } from './levels.js';
+import { getLevel, getInfiniteLevel, getKidLevel, MAX_LEVEL } from './levels.js';
 import { sfx, setMuted, isMuted } from './audio.js';
 import { getSprite, iconURL } from './art.js';
 
@@ -84,6 +84,7 @@ $('#btn-play').addEventListener('click', () => {
 });
 $('#map-back').addEventListener('click', () => { sfx.click(); show('screen-title'); });
 $('#btn-infinite').addEventListener('click', () => { sfx.unlock(); sfx.click(); startInfinite(); });
+$('#btn-kid').addEventListener('click', () => { sfx.unlock(); sfx.click(); startKid(); });
 
 function refreshInfBest() {
   $('#inf-best').textContent = save.infBest ? `Recorde infinito: ${fmt(save.infBest)}` : '';
@@ -193,7 +194,7 @@ $('#modal').addEventListener('click', e => {
   if (act === 'close') closeModal();
   else if (act === 'play') startLevel(+b.dataset.level);
   else if (act === 'resume') { closeModal(); if (board) board.paused = false; }
-  else if (act === 'retry') { if (cur.infinite) startInfinite(); else startLevel(cur.n); }
+  else if (act === 'retry') { if (cur.kid) startKid(); else if (cur.infinite) startInfinite(); else startLevel(cur.n); }
   else if (act === 'title') { closeModal(); board?.destroy(); board = null; refreshInfBest(); show('screen-title'); }
   else if (act === 'next') showIntro(Math.min(cur.n + 1, MAX_LEVEL));
   else if (act === 'map') toMap();
@@ -212,17 +213,19 @@ let board = null, cur = null;
 
 function startLevel(n) { begin(getLevel(n)); }
 function startInfinite() { begin(getInfiniteLevel()); }
+function startKid() { begin(getKidLevel()); }
 
 function begin(level) {
   closeModal();
   cur = level;
   board?.destroy();
   $('#screen-game').classList.toggle('infinite', !!cur.infinite);
+  $('#screen-game').classList.toggle('kid', !!cur.kid);
   $('#btn-help').classList.remove('show');
   show('screen-game');
-  $('#hud-level').textContent = cur.infinite ? '∞ 1' : cur.n;
+  $('#hud-level').textContent = cur.kid ? '⭐' : cur.infinite ? '∞ 1' : cur.n;
   buildHudGoals();
-  board = new Board($('#board'), cur, { onUpdate: updateHud, onEnd, onBigText: bigText, onStuck, onLevelUp });
+  board = new Board($('#board'), cur, { onUpdate: updateHud, onEnd, onBigText: bigText, onStuck, onLevelUp, onCelebrate: celebrate });
   fitBoard();
   updateHud();
   board.start();
@@ -231,6 +234,7 @@ function begin(level) {
 function onStuck(v) { $('#btn-help').classList.toggle('show', v); }
 
 function onLevelUp(lv) {
+  if (cur.kid) return;
   $('#hud-level').textContent = `∞ ${lv}`;
   setTimeout(() => { bigText(`Nível ${lv}!`, 'mega'); sfx.win(); }, 500);
 }
@@ -252,6 +256,7 @@ new ResizeObserver(fitBoard).observe($('#board-wrap'));
 
 function buildHudGoals() {
   const g = $('#hud-goals');
+  if (cur.kid) { g.innerHTML = '<div class="hg score"><small>Estrelas</small><b id="hud-best"></b></div>'; return; }
   if (cur.infinite) { g.innerHTML = '<div class="hg score"><small>Recorde</small><b id="hud-best"></b></div>'; return; }
   if (cur.kind === 'score') g.innerHTML = `<div class="hg score"><small>Meta</small><b>${fmt(cur.target)}</b></div>`;
   else if (cur.kind === 'collect') g.innerHTML = Object.keys(cur.collect).map(t => `<div class="hg" data-t="${t}"><img src="${iconURL(+t, 0, 72)}" alt=""><b></b></div>`).join('');
@@ -269,8 +274,8 @@ function updateHud() {
   shownScore = board.score;
   $('#hud-score').textContent = fmt(shownScore);
   if (board.infinite) {
-    if (board.score > (save.infBest || 0)) { save.infBest = board.score; persist(); }
-    $('#hud-best').textContent = fmt(save.infBest || 0);
+    if (!cur.kid && board.score > (save.infBest || 0)) { save.infBest = board.score; persist(); }
+    $('#hud-best').textContent = cur.kid ? fmt(Math.floor(board.score / 100)) : fmt(save.infBest || 0);
     const p = (board.score - board.infPrev) / (board.infNext - board.infPrev);
     $('#starbar .fill').style.width = `${Math.min(100, p * 100)}%`;
     return;
@@ -361,6 +366,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------- confete ----------
+let lastConfetti = 0;
+function celebrate(big) {
+  const now = performance.now();
+  if (big || now - lastConfetti > 1500) { lastConfetti = now; confetti(); }
+}
 function confetti() {
   const layer = $('#confetti');
   layer.innerHTML = '';
@@ -402,7 +412,7 @@ $('#btn-install').addEventListener('click', async () => {
 });
 if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) $('#btn-install').hidden = false;
 
-window.SuperCrush = { get board() { return board; }, startLevel, startInfinite };
+window.SuperCrush = { get board() { return board; }, startLevel, startInfinite, startKid };
 refreshSoundButtons();
 refreshInfBest();
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
