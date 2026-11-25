@@ -253,7 +253,7 @@ body.ready .logo { animation: logoIn .9s cubic-bezier(.2, 1.6, .4, 1) both; }
   box-shadow: inset 0 4px 0 rgba(255, 255, 255, .5), 0 2px 0 #c41c80;
 }
 
-#board-wrap { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 10px; }
+#board-wrap { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 10px 10px 44px; }
 .board-frame {
   padding: 6px; border-radius: 22px;
   background: linear-gradient(160deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, .12));
@@ -285,6 +285,16 @@ body.ready .logo { animation: logoIn .9s cubic-bezier(.2, 1.6, .4, 1) both; }
   70% { opacity: 1; transform: translateY(-55%) scale(1) rotate(-3deg); }
   100% { opacity: 0; transform: translateY(-75%) scale(.9) rotate(-3deg); }
 }
+
+#hint-tip {
+  position: absolute; left: 50%; bottom: 4px; z-index: 2;
+  max-width: calc(100% - 24px); padding: 6px 14px; border-radius: 999px;
+  background: rgba(40, 5, 80, .82); border: 2px solid rgba(255, 255, 255, .55);
+  color: #fff; font-weight: 600; font-size: clamp(.85rem, 3.6vw, 1rem); text-align: center;
+  pointer-events: none; opacity: 0; transform: translate(-50%, 8px);
+  transition: opacity .25s, transform .25s;
+}
+#hint-tip.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* ---------- modo infinito ---------- */
 #btn-infinite { font-size: 1.2rem; padding: 12px 30px; margin-top: 6px; }

@@ -1,6 +1,7 @@
 // Tabuleiro: lógica de combinação, doces especiais, cascatas, animações e efeitos.
 import { getSprite, PALETTE, SPECIAL, hexA } from './art.js';
 import { sfx } from './audio.js';
+import { makeState, bestMove } from './hint.js?v=7';
 
 const { NONE, H, V, WRAP, BOMB } = SPECIAL;
 
@@ -72,18 +73,41 @@ export class Board {
       this.updateFx(dt);
       if (!this.busy && !this.ended) {
         this.idle += dt;
-        if (this.idle > 5000 && !this.hint) {
-          this.hint = this.findMove();
-          if (this.hint) this.hintIds = new Set(this.hint.map(([r, c]) => this.grid[r][c].id));
-        }
+        if (this.idle > 5000 && !this.hint) this.showHint();
       }
     }
     this.render();
     this.raf = requestAnimationFrame(this.loop);
   };
 
+  // Dica: a jogada que mais avança a meta (ver hint.js), não só a primeira que combina.
+  showHint() {
+    let pick = null;
+    if (!this.kid) {
+      try {
+        const L = this.level;
+        pick = bestMove(makeState({
+          rows: this.rows, cols: this.cols, grid: this.grid, jelly: this.jelly, collect: this.collect,
+          kind: this.infinite ? 'infinite' : L.kind, moves: this.infinite ? 99 : this.moves,
+          score: this.score, target: L.target, colors: L.colors,
+        }));
+      } catch (err) { console.warn('hint', err); }
+    }
+    const move = pick?.move || this.findMove();
+    if (!move) return;
+    this.hint = move;
+    this.hintIds = new Set(move.map(([r, c]) => this.grid[r][c].id));
+    if (pick?.text) this.cb.onHint?.(pick.text);
+  }
+
+  clearHint() {
+    if (this.hint) this.cb.onHint?.(null);
+    this.hint = null; this.hintIds = null;
+  }
+
   destroy() {
     this.destroyed = true;
+    this.cb.onHint?.(null);
     cancelAnimationFrame(this.raf);
     const cv = this.canvas;
     cv.removeEventListener('pointerdown', this._down);
@@ -166,7 +190,7 @@ export class Board {
       const p = this.cellAt(e); if (!p) return;
       this.drag = { ...p, x: e.clientX, y: e.clientY };
       try { cv.setPointerCapture(e.pointerId); } catch { /* ok */ }
-      this.idle = 0; this.hint = null; this.hintIds = null;
+      this.idle = 0; this.clearHint();
     };
     this._move = e => {
       if (!this.drag) return;
@@ -357,7 +381,7 @@ export class Board {
     if (this.busy || this.ended) return;
     const a = this.grid[r1][c1], b = this.grid[r2][c2];
     if (!a || !b) return;
-    this.busy = true; this.hint = null; this.hintIds = null; this.idle = 0;
+    this.busy = true; this.clearHint(); this.idle = 0;
     sfx.swap();
     this.grid[r1][c1] = b; this.grid[r2][c2] = a;
     await Promise.all([this.tween(a, { x: c2, y: r2 }, 170, ease.inOut), this.tween(b, { x: c1, y: r1 }, 170, ease.inOut)]);
@@ -393,7 +417,7 @@ export class Board {
     if (this.busy || this.ended || !this.stuck) return;
     this.busy = true;
     this.setStuck(false);
-    this.hint = null; this.hintIds = null; this.selected = null;
+    this.clearHint(); this.selected = null;
     const normal = (r, c) => this.inside(r, c) && this.grid[r][c] && !this.grid[r][c].special;
     const pairs = [];
     for (let r = 0; r < this.rows; r++) for (let c = 0; c < this.cols; c++) {

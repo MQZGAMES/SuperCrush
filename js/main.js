@@ -1,6 +1,6 @@
 // Telas, mapa de fases, HUD, modais e progresso salvo.
-import { Board } from './board.js?v=6';
-import { getLevel, getInfiniteLevel, getKidLevel, MAX_LEVEL } from './levels.js?v=6';
+import { Board } from './board.js?v=7';
+import { getLevel, getInfiniteLevel, getKidLevel, MAX_LEVEL } from './levels.js?v=7';
 import { sfx, setMuted, isMuted } from './audio.js';
 import { getSprite, iconURL } from './art.js';
 
@@ -225,10 +225,16 @@ function begin(level) {
   show('screen-game');
   $('#hud-level').textContent = cur.kid ? '⭐' : cur.infinite ? '∞ 1' : cur.n;
   buildHudGoals();
-  board = new Board($('#board'), cur, { onUpdate: updateHud, onEnd, onBigText: bigText, onStuck, onLevelUp, onCelebrate: celebrate });
+  board = new Board($('#board'), cur, { onUpdate: updateHud, onEnd, onBigText: bigText, onStuck, onLevelUp, onCelebrate: celebrate, onHint });
   fitBoard();
   updateHud();
   board.start();
+}
+
+function onHint(text) {
+  const el = $('#hint-tip');
+  if (text) el.textContent = '💡 ' + text;
+  el.classList.toggle('show', !!text);
 }
 
 function onStuck(v) { $('#btn-help').classList.toggle('show', v); }
@@ -248,7 +254,7 @@ $('#btn-help').addEventListener('click', () => {
 function fitBoard() {
   if (!board) return;
   const wrap = $('#board-wrap');
-  const w = wrap.clientWidth - 20, h = wrap.clientHeight - 20;
+  const w = wrap.clientWidth - 20, h = wrap.clientHeight - 54; // 44px embaixo para o balão da dica
   const size = Math.max(200, Math.floor(Math.min(w, (h * cur.cols) / cur.rows)));
   board.resize(size);
 }
